@@ -32,8 +32,11 @@ namespace TRWebSite.Models
 
     public class mdlTripResults
     {
-        public DateTime travelDate { get; set; }
-        public decimal travelDistance { get; set; }
-        public decimal travelTime { get; set; }
+        public string travelDate { get; set; }
+        public double travelDistance { get; set; }
+        public double travelActualTime { get; set; }
+        public double travelEstTime { get; set; }
+        public string fromAddress { get; set; }
+        public string toAddress { get; set; }
     }
 }

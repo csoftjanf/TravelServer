@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using TRWebSite.Models;
@@ -26,19 +27,21 @@ namespace TRWebSite.Services
         {
             bool saveSuccess = false;
 
+
+            var geo = new GEO(_logger, _configuration);
+            if (geo.CalcTravelDistance(trip.startPoint, trip.endPoint))
+            {
+                trip.travelDistance = geo.travelDistance;
+                trip.googleTravelTime = geo.travelTime;
+                trip.startPoint.address = geo.fromAddress;
+                trip.endPoint.address = geo.toAddress;
+            }
+
             //temp commented out for testing
-            //var geo = new GEO(_logger, _configuration);
-            //if (geo.CalcTravelDistance(trip.startPoint, trip.endPoint))
-            //{
-            //    trip.travelDistance = geo.travelDistance;
-            //    trip.googleTravelTime = geo.travelTime;
-            //    trip.startPoint.address = geo.fromAddress;
-            //    trip.endPoint.address = geo.toAddress;
-            //}
-            trip.travelDistance = 84896;
-            trip.googleTravelTime = 3991;
-            trip.startPoint.address = "202 Albert St, Brisbane City QLD 4000, Australia";
-            trip.endPoint.address = "5 Martingale Cct, Clear Island Waters QLD 4226, Australia";
+            //trip.travelDistance = 84896;
+            //trip.googleTravelTime = 3991;
+            //trip.startPoint.address = "202 Albert St, Brisbane City QLD 4000, Australia";
+            //trip.endPoint.address = "5 Martingale Cct, Clear Island Waters QLD 4226, Australia";
 
             trip.travelTime = calcTravelTime();
 
@@ -70,6 +73,46 @@ namespace TRWebSite.Services
             }
             return saveSuccess;
         }
+
+        public async Task<mdlTravelResults> GetTravelAsync(int UserNo)
+        {
+            var travelResults = new mdlTravelResults();
+            travelResults.trips = new List<mdlTripResults>();
+            travelResults.userNumber = UserNo;
+            using (SqlConnection cnn = new SqlConnection(_configuration.GetConnectionString("TravelDB")))
+            {
+                try
+                {
+                    cnn.Open();
+                    SqlCommand cmd = new SqlCommand($"select * from trips where userNumber = {UserNo} order by start_date desc", cnn);
+
+                    SqlDataReader rdr = cmd.ExecuteReader();
+                    while (await rdr.ReadAsync())
+                    {
+                        travelResults.userName = (string)rdr["userName"];
+                        travelResults.trips.Add(
+                            new mdlTripResults
+                            {
+                                travelDate = ((DateTime)rdr["start_Date"]).ToString("dd/MM/yyyy"),
+                                travelDistance = (double)rdr["travelDistance"]/1000,
+                                travelActualTime = (double)rdr["travelTime"],
+                                travelEstTime = ((double)rdr["GoogletravelTime"])/60,
+                                fromAddress = (string)rdr["start_address"],
+                                toAddress = (string)rdr["end_address"],
+                            }
+                            );
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Error reading from database: {e.Message}");
+                }
+
+
+            }
+            return travelResults;
+        }
+
 
         private int calcTravelTime()
         {
