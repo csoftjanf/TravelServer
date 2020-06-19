@@ -1,8 +1,65 @@
-﻿@{
+﻿@model mdlTravelResults
+@{
     ViewData["Title"] = "Home Page";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome to the Trip Recorder</h1>
-    <p>This is the trip list</p>
+    <h1 class="display-4">Trips of @Model.userName</h1>
+    <p>Trips as @DateTime.Now.ToLongDateString()</p>
 </div>
+
+<h1>Trips</h1>
+
+<div class="container border">
+
+    <div class="row border">
+        <div class="col-sm-2 tripheader">
+            Trip Date
+        </div>
+        <div class="col-sm-3 tripheader">
+            From Address
+        </div>
+        <div class="col-sm-3 tripheader">
+            To Address
+        </div>
+        <div class="col-sm-1 tripheader">
+            Trip Distance (KM)
+        </div>
+        <div class="col-sm-1 tripheader">
+            Trip Actual Travel Time (min)
+        </div>
+        <div class="col-sm-2 tripheader">
+            Trip Estimated Travel Time (min)
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="com-sm-12 border-bottom"></div>
+    </div>
+
+    @foreach (var trip in Model.trips)
+    {
+        <div class="row">
+            <div class="col-sm-2">
+                @trip.travelDate
+            </div>
+            <div class="col-sm-3">
+                @trip.fromAddress
+            </div>
+            <div class="col-sm-3">
+                @trip.toAddress
+            </div>
+            <div class="col-sm-1">
+                @trip.travelDistance.ToString("###0.000")
+            </div>
+            <div class="col-sm-1">
+                @trip.travelActualTime.ToString("##0.00")
+            </div>
+            <div class="col-sm-2">
+                @trip.travelEstTime.ToString("##0.00")
+            </div>
+        </div>
+    }
+
+</div>
+
